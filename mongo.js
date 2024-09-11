@@ -64,9 +64,9 @@ if (process.argv.length == 3 || process.argv.length == 5) {
     else
     {
         const person = new Person({
-                name: `${data.name}`,
-                number: `${data.number}`,
-            })
+            name: `${data.name}`,
+            number: `${data.number}`,
+        })
 
         person.save().then(result => {
             console.log(`added ${person.name} number ${person.number} to phonebook`)
