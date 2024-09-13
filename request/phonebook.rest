@@ -6,8 +6,8 @@ POST http://localhost:3001/api/persons/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "name": "Donald Trumph",
-    "number": "01-1213313-131"
+    "name": "Luiz bernad",
+    "number": "440230-12123"
 }
 
 ###

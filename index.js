@@ -1,7 +1,9 @@
+require("dotenv").config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/phonebook')
 
 app.use(cors())
 app.use(express.json())
@@ -40,14 +42,14 @@ let persons = [
 
 ]
 
-// const requestLogger = (request, response, next) => {
-//     console.log('Method:', request.method)
-//     console.log('Path:', request.path)
-//     console.log('Body:', request.body)
-//     console.log('---')
-//     next()
-// }
-// app.use(requestLogger)
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method)
+    console.log('Path:', request.path)
+    console.log('Body:', request.body)
+    console.log('---')
+    next()
+}
+app.use(requestLogger)
 
 const generateId = () => {
     const maxId = persons.length > 0 ? 
@@ -62,8 +64,11 @@ app.get("/", (request, response) => {
 })
 
 app.get("/api/persons", (request, response) => {
-    console.log(persons)
-    response.json(persons)
+    Person.find({}).then(person => {
+        response.json(person)
+    }).catch(error => {
+        console.log(`Could not get numbers: ${error}`)
+    })
 })
 
 app.get("/info", (request, response) => {
@@ -78,9 +83,11 @@ app.get("/info", (request, response) => {
 
 app.get("/api/persons/:id", (request, response) => {
     const id = request.params.id
-    const note = persons.find(person => person.id === id)
-
-    note ? response.json(note) : response.status(404).end()
+    Person.findById(id).then(result => {
+        response.json(result)
+    }).catch(error => {
+        console.log(`Could not get perons ${error.message}`)
+    })
 })
 
 app.post("/api/persons/", (request, response) => {
@@ -92,23 +99,27 @@ app.post("/api/persons/", (request, response) => {
         })
     }
 
-    const person = {
+    const person = new Person({
         name: body.name,
-        number: body.number,
-        id: generateId()
-    }
-    const nameExists = persons.filter(persons => persons.name === person.name)
-    // console.log(nameExists)
-    // console.log(persons)
-    if (nameExists.length !== 0) {
-        return response.status(401).json({
-            error: "Name already exists"
+        number: body.number
+    })
+
+    Person.find({ name: person.name }).then(result => {
+        if (result.length > 0) {
+            console.log("name already exist")
+            return response.status(401).json({
+                error: "Name already exists"
+            })   
+        }
+
+        person.save().then(result => {
+            console.log(`Added ${person.name} number ${person.number} to phonebook`)
+            response.json(result)
+        }).catch(error => {
+            console.log(`Could not add ${person.name}'s number to phonebook`)
         })
-    }
+    })
 
-
-    persons = persons.concat(person)
-    response.json(person)
 })
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -121,7 +132,7 @@ app.delete("/api/persons/:id", (request, response) => {
    console.log(persons)
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`server running on port ${PORT}`)
 })
