@@ -11,12 +11,23 @@ mongoose.connect(url)
         console.log(`Error connecting to mongodb: ${error.message}`)
     })
 
+const phoneRegExp = /^(\d{2}|\d{3})-(\d{6,})$/
 const phonebookSchema = new mongoose.Schema({
     name: {
         minLength: 3,
         type: String,
+        required: true,
     },
-    number: String,
+    number: {
+        type: String,
+        validate: {
+            validator: function(v) {
+                return phoneRegExp.test(v)
+            },
+            message: props => `${props.value} is not a valid phone number!`,
+        },
+        required: true,
+    },
 })
 
 phonebookSchema.set('toJSON', {
